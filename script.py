@@ -1,7 +1,7 @@
 import sys
 import requests
 from bs4 import BeautifulSoup
-from urlib.parse imoprt urljoin
+from urlib.parse import urljoin
 import time
 import os
 import csv
@@ -25,8 +25,8 @@ def download_file(url: str) -> str:
     Returns: str
         Obsah staženého souboru jako text.
     """
-      r = request.get(url, hraders=HEADERS)
-    r.raise_for_status(url)
+    r = requests.get(url, headers=HEADERS)
+    r.raise_for_status()
     return r.text
 
 # okresy - seznam obcí

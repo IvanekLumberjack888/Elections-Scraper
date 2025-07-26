@@ -12,7 +12,7 @@ import csv
 
 """
 URL = "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203"
-districturl = "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203&xobec="
+DISTRICTURL = "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203&xobec="
 
 
 # pyjamask :-)

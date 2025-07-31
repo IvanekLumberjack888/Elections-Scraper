@@ -78,4 +78,19 @@ for table in page.select("table"):
     name = " ".join(code)
     return {"kód": code, "obec": name, "voliči": voters, "obálky": envelopes, "platné": valid, **parties}
 
+# **CSV**
 
+
+
+
+
+
+
+
+
+
+
+
+# Hlavní fce
+# main je none
+#     pak bude to argv. - jestliže je v argv něco, tak to bude název souboru

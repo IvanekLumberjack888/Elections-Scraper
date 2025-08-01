@@ -135,5 +135,5 @@ def main(argv: List[str] = None) -> None:
 
 # Hlavní funkce
 
-if main.__name__ == "__main__":
+if __name__ == "__main__":
     main()

@@ -76,17 +76,15 @@ def ziskej_hlasy_stran(soup: BeautifulSoup) -> Dict[str, str]:
     """
     Vrací slovník s názvy stran a počtem hlasů z dané stránky.
     """ 
-    vysledky = {}
-    tabulka = soup.find("table", {"class": "table"})  # Najdi tabulku s výsledky
-    if not tabulka:
-        return vysledky
-    for radek in tabulka.find_all("tr"):
-        bunky = radek.find_all("td")
-        if len(bunky) >= 3:
-            nazev_strany = bunky[1].get_text(strip=True)
-            hlasy = bunky[2].get_text(strip=True).replace('\xa0', '')
-            vysledky[nazev_strany] = hlasy
-    return vysledky
+    strany = {}
+    for tabulka in tabulka.find_all("table", {"class": "table"}):
+        for radek in tabulka.find_all("tr"):
+            bunky = radek.find_all("td")
+            if len(bunky) >= 3:
+                nazev_strany = bunky[1].get_text(strip=True)
+                hlasy = bunky[2].get_text(strip=True).replace('\xa0', '')
+                strany[nazev_strany] = hlasy
+    return strany
 
 # **CSV**
 

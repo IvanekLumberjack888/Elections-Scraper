@@ -32,7 +32,7 @@
 ## 1. Příprava prostředí
 
 ```bash
-cd C:\Users\ivi_divi_whiskery\Documents\prvni_scraping\moje
+uděláte si prázdnou složku a v terminálu zadáte přikaz:
 python -m venv .venv
 # PowerShell:
 .venv\Scripts\Activate.ps1

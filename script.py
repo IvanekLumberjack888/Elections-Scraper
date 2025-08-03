@@ -2,7 +2,7 @@ from __future__ import annotations
 import requests                             # pro requests.get stahování
 from bs4 import BeautifulSoup               # parsovní stránek
 from urllib.parse import urljoin            # spojování adres URL
-# import os                                 # pro např. clearování
+# import os                                   # pro např. clearování
 import csv                                  # pro CSV
 import sys                                  # z přikázové řádky
 from typing import List, Dict, Tuple        # pro typování
@@ -20,10 +20,10 @@ import time                                 # pro časové pauzy mezi requesty
          WW WWW WW EE      BB   BB        SS CC    C RR  RR  AAAAAAA PP      EE      RR  RR  
           WW   WW  EEEEEEE BBBBBB     SSSSS   CCCCC  RR   RR AA   AA PP      EEEEEEE RR   RR 
     ---
-    V příkazové řádce:
+    VOLBY.CZ v příkazové řádce:
         -> Obecné použití:
         python main.py <URL_okresu> <vystupni_soubor.csv>
-        -> 👉 Můj příklad: 👈
+        -> 👉 Můj příklad – Volby 2017 konkrétní výběr z okresu a obcí 👈
         python main.py 'https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203' 'vystup.csv'
 """
 
@@ -38,14 +38,20 @@ SLEEP = 0.8     # PAUZA mezi jednotlivými voláními get. Aby server nezkolabov
 # Odkaz na hlavní stránku s výsledky voleb do Poslanecké sněmovny ČR 2017
 url = "https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ"
 
-# Odkaz na okres, který budeme zpracovávat (👉 Můj příklad 👈)
+# Můj vybraný okres
+district_name = "Brno-venkov"
+
+# Odkaz na okres
 district_url = "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203"
 
 # Výpis základních informací o programu
 print(
-    f'''Skrejpujeme volební data z vybraného okresu, který je na stránce {url}
-    a to konkrétně z okresu {district_url}'''
-    )
+    f''' ...🔪+🥔 = 🍟\nSkrejpujeme volební data z vybraného okresu, který je na stránce:
+    {url}
+    a to konkrétně z okresu {district_name}
+    adresa je:
+    {district_url}'''
+)
 
 # Kontrola argumentů - čili url a soubor pro uložení dat
 def validate_args() -> Tuple[str, str]:
@@ -204,90 +210,67 @@ def parse_municipality_data(municipality_url: str) -> dict:
 # ====================== CSV ==========================
 # =====================================================
 
+
+
+
 def save_to_csv(data: List[Dict[str, str]], filename: str) -> None:
     """Uloží data do CSV souboru."""
     if not data:
         print("Žádná data k uložení.")
         return
 
-    base_columns = ["kód obce", "název obce", "voliči v seznamu", "vydané obálky", "platné hlasy"]
-    with open(filename, mode="w", newline="", encoding="utf-8") as csv_file:
-        fieldnames = data[0].keys()
-        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(data)
-        csv_file.close()
+    zahlavi = ["kód obce", "název obce", "voliči v seznamu", "vydané obálky", "platné hlasy"]
+   
+    parties = set()
+    for obec in data:
+        for nazev_sloupce in obec.keys():
+            if nazev_sloupce not in zahlavi and nazev_sloupce not in ["kód obce", "název obce"]:
+                parties.add(nazev_sloupce)
+    parties = sorted(parties)
+    fieldnames = zahlavi + parties
 
-# **Hlavní část programu**
+    try:
+        with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect='extel-tab')
+            writer.writeheader()
+            for obec in data:
+                row = {key: obec.get(key, "") for key in fieldnames}
+                writer.writerow(row)
+    except IOError as e:
+        print(f"Chyba při ukládání do CSV souboru {filename}: {e}")
+        sys.exit(1)
+
+    print(f"CSV uloženo: {filename} ({len(data)} záznamů, {len(data)} obce/obcí, {len(parties)} strany/stran)")
+
+# =====================================================
+# ====================== MAIN =========================
+# =====================================================
+
 def main(argv: List[str] = None) -> None:
     """Hlavní funkce programu."""
-    if argv is None:
-        argv = sys.argv[1:]
+    print("Election Scraper - Volby.cz 2017")
+    print("=================================")
+    
+    district_url, outputfile = validate_args()
 
-    if len(sys.argv) != 3:
-        print(f"Použití: {sys.argv[0]} <url> a {sys.argv[1]} jako <soubor pro uložení dat v CSV formátu>")
-        return
-    # ...
-    for i, link in enumerate(municipality_links, 1):
-        # ...
+    print(f"Okres: {district_url}")
+    print(f"Výstup: {outputfile}\n")
+
+    municipality_links = get_municipality_links(district_url)
+    if not municipality_links:
+        print("Žádné obce - nenalezeno.")
+        sys.exit(1)
+
+    all_municipality_data = []
+    for i, link in enumerate(municipality_data := municipality_links, 1):
+        print(f"[{i} z {len(municipality_links)}] Zpracovávám..")
         municipality_data = parse_municipality_data(link)
+        all_municipality_data.append(municipality_data)
+        time.sleep(SLEEP)
 
-    if not argv:
-        print("Nebyl zadán žádný soubor pro uložení dat.")
-        return
-    
-    url = argv[0]  # První argument je URL
-    if not url.startswith("http"):
-        print("Zadaná URL není platná. Ujistěte se, že začíná na http:// nebo https://")
-        return
-    if not url.endswith("/"):
-        url += "/"  # Přidá lomítko na konec URL, pokud tam není
-    print(f"Stahuji data z {url}")
+    #write_csv(all_municipality_data, outputfile)  # Uložení do CSV souboru
+    save_to_csv(all_municipality_data, outputfile)
+    print("Hotovo.")
 
-    # Druhý argument je název souboru pro uložení dat
-    if len(argv) < 2:
-        print("Nebyl zadán název souboru pro uložení dat.")
-        return
-    if len(argv) > 2:
-        print("Bylo zadáno více než dva argumenty. Použijte pouze URL a název souboru.")
-        return
-    if not argv[1]:
-        print("Nebyl zadán název souboru pro uložení dat.")
-        return
-    
-    filename = argv[1]
-    if not filename.endswith(".csv"):
-        print("Zadaný soubor pro uložení dat musí mít příponu .csv")
-    elif out_csv := filename.endswith(".csv"):
-        out_csv += ".csv"  # Přidá příponu .csv, pokud není přítomna
-        print(f"Ukládám data do souboru {out_csv}")
-        return
-    
-    # Získání HTML obsahu
-    soup_obj = make_soup(url)
-    if not soup_obj:
-        print("Nepodařilo se získat obsah stránky.")
-        return
-    # Získání okresů
-    districts = parse_district(soup_obj)
-    
-    # Příklad: projít všechny okresy a stáhnout jejich stránky s pauzou
-    for district_link in districts:
-        # ...zpracování dat...
-        time.sleep(SLEEP)  # Pauza mezi požadavky
-
-    # Uložení do CSV
-    # save_to_csv(districts, filename)  # Upravte podle toho, co chcete ukládat
-    
-    print(f"Data byla úspěšně uložena do souboru {filename}")
-    # Výpis všech A tagů
-    print("Všechny odkazy:")
-    for link in get_all_a_tags(soup_obj):
-        print(link.get_text(strip=True), link['href'])
-
-# Hlavní funkce
-
-if main.__name__ == "__main__":
+if __name__ == "__main__":
     main()
-
-#make_soup() - vytvoří BeautifulSoup objekt

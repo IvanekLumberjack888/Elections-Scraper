@@ -1,12 +1,14 @@
 from __future__ import annotations
-import requests                             # pro requests.get stahování
-from bs4 import BeautifulSoup               # parsovní stránek
-from urllib.parse import urljoin            # spojování adres URL
+import requests  # pro requests.get stahování
+from bs4 import BeautifulSoup  # parsovní stránek
+from urllib.parse import urljoin  # spojování adres URL
+
+import csv  # pro CSV
+import sys  # z přikázové řádky
+from typing import List, Dict, Tuple  # pro typování
+import time  # pro časové pauzy mezi requesty
+
 # import os                                   # pro např. clearování
-import csv                                  # pro CSV
-import sys                                  # z přikázové řádky
-from typing import List, Dict, Tuple        # pro typování
-import time                                 # pro časové pauzy mezi requesty
 
 """
     main.py: třetí projekt do Engeto Online Python Akademie
@@ -28,11 +30,13 @@ import time                                 # pro časové pauzy mezi requesty
 """
 
 # kONSTANTY
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
+HEADERS = (
+    "User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"
+)
 # --- IGNORE --- Základní maskování prohlížeče #NEJSME_ROBOTI 🤖🤖🤖
 # --- IGNORE --- NA WEBU VOLBY.CZ/ROBOTS.TXT je pouze:
 # --- IGNORE --- User-agent: * a taky "Disallow: /pls/" -> takže pohoda 😉
-SLEEP = 0.8     # PAUZA mezi jednotlivými voláními get. Aby server nezkolaboval. Je to v sekundách
+SLEEP = 0.8  # PAUZA mezi jednotlivými voláními get. Aby server nezkolaboval. Je to v sekundách
 # --- IGNORE --- Pro jistotu
 
 # Odkaz na hlavní stránku s výsledky voleb do Poslanecké sněmovny ČR 2017
@@ -42,15 +46,17 @@ url = "https://volby.cz/pls/ps2017nss/ps3?xjazyk=CZ"
 district_name = "Brno-venkov"
 
 # Odkaz na okres
-district_url = "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203"
+district_url = (
+    "https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203"
+)
 
 # Výpis základních informací o programu
 print(
-    f''' ...🔪+🥔 = 🍟\nSkrejpujeme volební data z vybraného okresu, který je na stránce:
+    f""" ...🔪+🥔 = 🍟\nSkrejpujeme volební data z vybraného okresu, který je na stránce:
     {url}
-    a to konkrétně z okresu {district_name}
-    adresa je:
-    {district_url}'''
+    A to konkrétně z okresu {district_name}
+    Adresa je:
+    {district_url}"""
 )
 
 # Kontrola argumentů - čili url a soubor pro uložení dat
@@ -69,16 +75,18 @@ def validate_args() -> Tuple[str, str]:
     if "volby.cz" not in district_url or "ps32" not in district_url:
         print("Zadaná URL není platná. Ujistěte se, že obsahuje 'volby.cz' a 'ps32'.")
         sys.exit(1)
-    
+
     if not outputfile.endswith(".csv"):
         outputfile += ".csv"
 
     return district_url, outputfile
 
+
 # =====================================================
 # ========== Základní stahování a parsování: ==========
 # =====================================================
-def fetch_data(url: str) -> str:                                                   
+
+def fetch_data(url: str) -> str:
     """Funkce pro získání HTML obsahu z dané URL."""
     try:
         resp = requests.get(url, headers=HEADERS, timeout=15)
@@ -88,10 +96,12 @@ def fetch_data(url: str) -> str:
         print(f"Chyba při stahování dat z {url}: {e}")
         sys.exit(1)
 
-def make_soup(url: str) -> BeautifulSoup:                                  
+
+def make_soup(url: str) -> BeautifulSoup:
     """Funkce pro vytvoření BeautifulSoup objektu z HTML obsahu."""
     html_content = fetch_data(url)
     return BeautifulSoup(html_content, features="html.parser")
+
 
 def parse_h3_title(soup: BeautifulSoup) -> tuple[str, str]:
     """
@@ -108,6 +118,7 @@ def parse_h3_title(soup: BeautifulSoup) -> tuple[str, str]:
     else:
         return "", ""
 
+
 # Obce z okresu
 def get_municipality_links(district_url: str) -> List[str]:
     """
@@ -122,18 +133,20 @@ def get_municipality_links(district_url: str) -> List[str]:
         if a_tag:
             full_url = urljoin(district_url, a_tag["href"])
             links.append(full_url)
- 
+
     print(f"Nalezeno {len(links)} obcí.")
     return links
 
+
 # Údaje z obce -> jednotlivé fce
 
-def parse_municipality_code(soup: BeautifulSoup) -> str:                   
+def parse_municipality_code(soup: BeautifulSoup) -> str:
     """
     Vrací kód obce
     """
     _, kod = parse_h3_title(soup)
     return kod
+
 
 def get_municipality_name(soup: BeautifulSoup) -> str:
     """
@@ -142,17 +155,14 @@ def get_municipality_name(soup: BeautifulSoup) -> str:
     nazev, _ = parse_h3_title(soup)
     return nazev
 
+
 def get_municipality_stats(soup: BeautifulSoup) -> Dict[str, str | int]:
     """
     Vrací statistiky obce (voliči v seznamu, vydané obálky, platné hlasy)
-    """ 
-    stats = soup.select('td:has(span.number)')
+    """
+    stats = soup.select("td:has(span.number)")
 
-    vysledek = {
-        "voliči v seznamu": 0,
-        "vydané obálky": 0,
-        "platné hlasy": 0
-    }
+    vysledek = {"voliči v seznamu": 0, "vydané obálky": 0, "platné hlasy": 0}
 
     if len(stats) >= 3:
         try:
@@ -160,10 +170,11 @@ def get_municipality_stats(soup: BeautifulSoup) -> Dict[str, str | int]:
             vysledek["vydané obálky"] = int(stats[1].get_text().replace("\xa0", ""))
             vysledek["platné hlasy"] = int(stats[2].get_text().replace("\xa0", ""))
         except ValueError:
-        # Pokud dojde k chybě, budou nuly
+            # Pokud dojde k chybě, budou nuly
             pass
 
     return vysledek
+
 
 def get_municipality_parties(soup: BeautifulSoup) -> Dict[str, str | int]:
     """
@@ -186,6 +197,7 @@ def get_municipality_parties(soup: BeautifulSoup) -> Dict[str, str | int]:
 
     return parties
 
+
 def parse_municipality_data(municipality_url: str) -> Dict[str, str | int]:
     """
     Hlavní funkce - zpracuje jednu obec pomocí menších funkcí.
@@ -206,11 +218,10 @@ def parse_municipality_data(municipality_url: str) -> Dict[str, str | int]:
 
     return data
 
+
 # =====================================================
 # ====================== CSV ==========================
 # =====================================================
-
-
 
 
 def save_to_csv(data: List[Dict[str, int | str]], filename: str) -> None:
@@ -219,8 +230,14 @@ def save_to_csv(data: List[Dict[str, int | str]], filename: str) -> None:
         print("Žádná data k uložení.")
         return
 
-    zahlavi = ["kód obce", "název obce", "voliči v seznamu", "vydané obálky", "platné hlasy"]
-   
+    zahlavi = [
+        "kód obce",
+        "název obce",
+        "voliči v seznamu",
+        "vydané obálky",
+        "platné hlasy",
+    ]
+
     parties = set()
     for obec in data:
         for nazev_sloupce in obec.keys():
@@ -230,26 +247,30 @@ def save_to_csv(data: List[Dict[str, int | str]], filename: str) -> None:
     fieldnames = zahlavi + parties
 
     try:
-        with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect='excel-tab')
+        with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect="excel-tab")
             writer.writeheader()
             writer.writerows(data)
-            
+
     except IOError as e:
         print(f"Chyba při ukládání do CSV souboru {filename}: {e}")
         sys.exit(1)
 
-    print(f"CSV uloženo: {filename} ({len(data)} záznamů, {len(data)} obce/obcí, {len(parties)} strany/stran)")
+    print(
+        f"CSV uloženo: {filename} ({len(data)} záznamů, {len(data)} obce/obcí, {len(parties)} strany/stran)"
+    )
+
 
 # =====================================================
 # ====================== MAIN =========================
 # =====================================================
 
+
 def main(argv: List[str] = None) -> None:
     """Hlavní funkce programu."""
     print("Election Scraper - Volby.cz 2017")
     print("=================================")
-    
+
     district_url, outputfile = validate_args()
 
     print(f"Okres: {district_url}")
@@ -266,11 +287,12 @@ def main(argv: List[str] = None) -> None:
         municipality_data = parse_municipality_data(link)
         all_municipality_data.append(municipality_data)
 
-    print(f"Zpracováno: {municipality_data['název obce']}, ukládám do csv.")
-    time.sleep(SLEEP)
-    
+        print(f"Zpracováno: {municipality_data['název obce']}, ukládám do csv.")
+        time.sleep(SLEEP)
+
     print("Hotovo.")
     save_to_csv(all_municipality_data, outputfile)
+
 
 if __name__ == "__main__":
     main()

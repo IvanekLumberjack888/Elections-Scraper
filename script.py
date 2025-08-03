@@ -27,7 +27,7 @@ import time                                 # pro časové pauzy mezi requesty
         python main.py 'https://www.volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203' 'vystup.csv'
 """
 
-# CONSTANTS
+# kONSTANTY
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36"}
 # --- IGNORE --- Základní maskování prohlížeče #NEJSME_ROBOTI 🤖🤖🤖
 # --- IGNORE --- NA WEBU VOLBY.CZ/ROBOTS.TXT je pouze:
@@ -88,7 +88,7 @@ def fetch_data(url: str) -> str:
         print(f"Chyba při stahování dat z {url}: {e}")
         sys.exit(1)
 
-def make_soup(url: str) -> BeautifulSoup:                                   
+def make_soup(url: str) -> BeautifulSoup:                                  
     """Funkce pro vytvoření BeautifulSoup objektu z HTML obsahu."""
     html_content = fetch_data(url)
     return BeautifulSoup(html_content, features="html.parser")
@@ -102,14 +102,14 @@ def parse_h3_title(soup: BeautifulSoup) -> tuple[str, str]:
         text = h3.get_text(strip=True)
         if "kód" in text:
             nazev, kod = text.rsplit("kód", 1)
-            return nazev.replace("-", "").strip(), kod.strip()
+            return nazev.replace("–", "").strip(), kod.strip()
         else:
             return text, ""
     else:
         return "", ""
 
 # Obce z okresu
-def get_municipality_links(district_url: str):
+def get_municipality_links(district_url: str) -> List[str]:
     """
     Vrací odkazy z jednotlivých okresů do listu
     """
@@ -122,7 +122,7 @@ def get_municipality_links(district_url: str):
         if a_tag:
             full_url = urljoin(district_url, a_tag["href"])
             links.append(full_url)
-
+ 
     print(f"Nalezeno {len(links)} obcí.")
     return links
 
@@ -135,28 +135,28 @@ def parse_municipality_code(soup: BeautifulSoup) -> str:
     _, kod = parse_h3_title(soup)
     return kod
 
-def get_municipality_name(soup: BeautifulSoup) -> str:                     # get_municipality_name() -> parsování názvu obce
+def get_municipality_name(soup: BeautifulSoup) -> str:
     """
     Vrací název obce
     """
-    _, nazev = parse_h3_title(soup)
+    nazev, _ = parse_h3_title(soup)
     return nazev
 
-def get_municipality_stats(soup: BeautifulSoup) -> dict[str, int]:
+def get_municipality_stats(soup: BeautifulSoup) -> Dict[str, str | int]:
     """
-    Vrací statistiky obce (voliči, vydané obálky, platné hlasy)
+    Vrací statistiky obce (voliči v seznamu, vydané obálky, platné hlasy)
     """ 
     stats = soup.select('td:has(span.number)')
 
     vysledek = {
-        "voliči": 0,
+        "voliči v seznamu": 0,
         "vydané obálky": 0,
         "platné hlasy": 0
     }
 
     if len(stats) >= 3:
         try:
-            vysledek["voliči"] = int(stats[0].get_text().replace("\xa0", ""))
+            vysledek["voliči v seznamu"] = int(stats[0].get_text().replace("\xa0", ""))
             vysledek["vydané obálky"] = int(stats[1].get_text().replace("\xa0", ""))
             vysledek["platné hlasy"] = int(stats[2].get_text().replace("\xa0", ""))
         except ValueError:
@@ -165,7 +165,7 @@ def get_municipality_stats(soup: BeautifulSoup) -> dict[str, int]:
 
     return vysledek
 
-def get_municipality_parties(soup: BeautifulSoup) -> dict[str, int]:
+def get_municipality_parties(soup: BeautifulSoup) -> Dict[str, str | int]:
     """
     Vrací slovník s počtem hlasů pro jednotlivé strany v obci.
     """
@@ -186,7 +186,7 @@ def get_municipality_parties(soup: BeautifulSoup) -> dict[str, int]:
 
     return parties
 
-def parse_municipality_data(municipality_url: str) -> dict:
+def parse_municipality_data(municipality_url: str) -> Dict[str, str | int]:
     """
     Hlavní funkce - zpracuje jednu obec pomocí menších funkcí.
     Tohle je orchestrátor který spojuje všechny municipality_ funkce.
@@ -213,7 +213,7 @@ def parse_municipality_data(municipality_url: str) -> dict:
 
 
 
-def save_to_csv(data: List[Dict[str, str]], filename: str) -> None:
+def save_to_csv(data: List[Dict[str, int | str]], filename: str) -> None:
     """Uloží data do CSV souboru."""
     if not data:
         print("Žádná data k uložení.")
@@ -224,18 +224,17 @@ def save_to_csv(data: List[Dict[str, str]], filename: str) -> None:
     parties = set()
     for obec in data:
         for nazev_sloupce in obec.keys():
-            if nazev_sloupce not in zahlavi and nazev_sloupce not in ["kód obce", "název obce"]:
+            if nazev_sloupce not in zahlavi:
                 parties.add(nazev_sloupce)
     parties = sorted(parties)
     fieldnames = zahlavi + parties
 
     try:
         with open(filename, mode='w', newline='', encoding='utf-8') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect='extel-tab')
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, dialect='excel-tab')
             writer.writeheader()
-            for obec in data:
-                row = {key: obec.get(key, "") for key in fieldnames}
-                writer.writerow(row)
+            writer.writerows(data)
+            
     except IOError as e:
         print(f"Chyba při ukládání do CSV souboru {filename}: {e}")
         sys.exit(1)
@@ -262,15 +261,16 @@ def main(argv: List[str] = None) -> None:
         sys.exit(1)
 
     all_municipality_data = []
-    for i, link in enumerate(municipality_data := municipality_links, 1):
+    for i, link in enumerate(municipality_links, 1):
         print(f"[{i} z {len(municipality_links)}] Zpracovávám..")
         municipality_data = parse_municipality_data(link)
         all_municipality_data.append(municipality_data)
-        time.sleep(SLEEP)
 
-    #write_csv(all_municipality_data, outputfile)  # Uložení do CSV souboru
-    save_to_csv(all_municipality_data, outputfile)
+    print(f"Zpracováno: {municipality_data['název obce']}, ukládám do csv.")
+    time.sleep(SLEEP)
+    
     print("Hotovo.")
+    save_to_csv(all_municipality_data, outputfile)
 
 if __name__ == "__main__":
     main()

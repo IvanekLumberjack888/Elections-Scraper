@@ -1,4 +1,4 @@
----ENG---
+---EN---
 
 # Election Scraper – Chamber of Deputies 2017
 
@@ -90,7 +90,7 @@ GitHub: @IvanekLumberjack888
 
 -------------------------------------------------------------------------------------------------------
 
----CZE---
+---CZ---
 
 # Election Scraper – Volby 2017
 
@@ -183,4 +183,5 @@ Testováno na Python 3.13.3 (Windows)
 
 **Ivo Doležal**  
 Email: ivousd@gmail.com  
+
 GitHub: @IvanekLumberjack888

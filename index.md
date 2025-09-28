@@ -1,3 +1,6 @@
+---
+title: election_scraper
+---
 Přehled mých projektů je ne webu: https://ivaneklumberjack888.github.io/#projects
 
 ---EN---

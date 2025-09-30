@@ -11,12 +11,35 @@
 
 body {
   font-family: 'Inter', 'Montserrat', Arial, sans-serif;
-  background: url('../images/background.jpg') center/cover fixed no-repeat;
+  background:
+    linear-gradient(120deg, rgba(48,91,51,0.90) 0%, rgba(30,50,35,0.82) 100%),
+    url('../images/background.jpg') center/cover fixed no-repeat;
   min-height: 100vh;
   margin: 0;
-  padding: 45px 0;
+  padding: 60px 0 0 0;
 }
 
+.top-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #0b3d0b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 1rem;
+  z-index: 999;
+  box-shadow: 0 6px 20px 0 rgba(34,77,34,0.09);
+}
+.top-menu a {
+  color: #A8E063;
+  font-weight: 600;
+  text-decoration: underline;
+}
+.top-menu a:hover {
+  color: #e9f17d;
+}
 
 .glass-card {
   background: var(--bg-glass);
@@ -37,13 +60,13 @@ h1, h2 {
 }
 
 h1 {
-  font-size: 2.4rem;
+  font-size: 2.2rem;
   font-weight: bold;
   margin-bottom: 1.1rem;
 }
 
 h2 {
-  font-size: 1.6rem;
+  font-size: 1.48rem;
   margin-bottom: 0.5rem;
 }
 
@@ -115,7 +138,7 @@ li {
     padding: 1rem 0.5rem;
     margin: 0.5rem;
   }
-  h1 { font-size: 1.4rem;}
-  h2 { font-size: 1.1rem;}
+  h1 { font-size: 1.1rem;}
+  h2 { font-size: 1rem;}
   table { font-size: 0.87rem;}
 }

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Election Scraper – Chamber of Deputies 2017</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+  <!-- Styl projektu -->
+  <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+  <div class="glass-card">
+    <div class="badge-row" style="margin:1em 0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+      <img src="https://img.shields.io/badge/Python-3.13-blue?style=for-the-badge&logo=python" alt="Python Badge"/>
+      <img src="https://img.shields.io/badge/Web%20Scraping-beige?style=for-the-badge&logo=webcomponents.org" alt="Web Scraping"/>
+      <img src="https://img.shields.io/badge/ENGETO-Project-green?style=for-the-badge" alt="Engeto"/>
+      <img src="https://img.shields.io/badge/Status-Completed-success?style=for-the-badge" alt="Status"/>
+    </div>
+
+    <h1>🗳️ Election Scraper – Chamber of Deputies 2017</h1>
+    <p><strong>Third Project for Engeto Online Python Academy</strong></p>
+
+    <h2>Itinerary</h2>
+    <ol>
+      <li><strong>Environment Setup</strong>
+        <ul>
+          <li>a) Open your terminal and navigate to the project folder</li>
+          <li>b) Create a virtual environment</li>
+          <li>c) Activate the virtual environment</li>
+          <li>d) Upgrade pip</li>
+          <li>e) Install dependencies from <code>requirements.txt</code></li>
+        </ul>
+      </li>
+      <li><strong>Running the Script</strong>
+        <ul>
+          <li>a) In the terminal type:</li>
+          <pre>python main.py "" ""</pre>
+          <li>b) Wait for console output:</li>
+          <pre>
+Fetching data from: 
+Saving to: 
+Done!
+          </pre>
+        </ul>
+      </li>
+      <li><strong>Verify Output</strong>
+        <ul>
+          <li>Open the generated CSV in Excel or a text editor and check that the header and first rows look like this:</li>
+          <pre>
+code;location;registered;envelopes;valid;ANO 2011;Blok proti islam.-Obran.domova;CESTA ODPOVĚDNÉ SPOLEČNOSTI;Dobrá volba 2016;Dělnic.str.sociální spravedl.;Komunistická str.Čech a Moravy;Křesť.demokr.unie-Čs.str.lid.;Národ Sobě;Občanská demokratická aliance;Občanská demokratická strana;REALISTÉ;ROZUMNÍ-stop migraci,diktát.EU;Radostné Česko;Referendum o Evropské unii;SPORTOVCI;SPR-Republ.str.Čsl. M.Sládka;STAROSTOVÉ A NEZÁVISLÍ;Strana Práv Občanů;Strana svobodných občanů;Strana zelených;Svob.a př.dem.-T.Okamura (SPD);TOP 09;Česká pirátská strana;Česká str.sociálně demokrat.;Česká strana národně sociální;Řád národa - Vlastenecká unie
+;Babice nad Svitavou;925;660;660;129;0;2;0;1;31;69;0;0;109;2;3;0;0;1;3;53;1;10;7;58;39;93;43;0;1
+;Babice u Rosic;553;353;353;93;0;0;0;1;30;25;0;2;32;4;1;1;0;1;1;27;0;6;5;49;13;37;18;5;0
+;Běleč;160;131;131;30;0;0;0;0;14;14;0;0;13;0;1;0;1;0;0;8;0;0;0;12;1;11;25;0;0
+          </pre>
+        </ul>
+      </li>
+    </ol>
+
+    <h2>Full Command Example</h2>
+    <pre>
+cd path/to/project
+python -m venv .venv
+
+# PowerShell
+.venv\Scripts\Activate.ps1
+
+# CMD
+.venv\Scripts\activate.bat
+
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+python main.py "https://volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203" "results_brno_venkov.csv"
+    </pre>
+    <ul>
+      <li><strong>Argument 1:</strong> District URL (must contain <code>ps32</code>)</li>
+      <li><strong>Argument 2:</strong> Name of the output CSV file</li>
+    </ul>
+    <h2>Expected Console Output</h2>
+    <pre>
+Fetching data from: https://volby.cz/pls/ps2017nss/ps32?xjazyk=CZ&xkraj=11&xnumnuts=6203
+Saving to: results_brno_venkov.csv
+Done!
+    </pre>
+
+    <h2>Python Version</h2>
+    <p>Tested on Python 3.13.3 (Windows)</p>
+
+    <h2>Contact</h2>
+    <ul>
+      <li>Ivo Doležal</li>
+      <li>Email: <a href="mailto:ivousd@gmail.com">ivousd@gmail.com</a></li>
+      <li>GitHub: <a href="https://github.com/IvanekLumberjack888">@IvanekLumberjack888</a></li>
+    </ul>
+  </div>
+</body>
+</html>
